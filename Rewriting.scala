@@ -84,7 +84,7 @@ trait UntypedTraversal extends UntypedLang with Reflection {
    */
 }
 
-object UntypedTraversalExample extends UntypedTraversal {
+object UntypedTraversalExample extends UntypedTraversal with App {
   //A very basic form of constant folding:
   val constantFoldingCore: Term => Term = {
     case Plus(Lit(a), Lit(b)) => Lit(a + b)
@@ -96,7 +96,8 @@ object UntypedTraversalExample extends UntypedTraversal {
   val constantFolding = traverse(constantFoldingCore)
 
   val tree = Plus(Plus(Lit(1), Lit(2)), Lit(3))
-  println(constantFolding(tree))
+  println(s"Before constant folding: ${tree}")
+  println(s"After constant folding: ${constantFolding(tree)}")
 }
 
 //Using reflectiveCopy to implement bottom-up rewrites on typed trees.
