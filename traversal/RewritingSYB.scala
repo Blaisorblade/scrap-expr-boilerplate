@@ -4,12 +4,6 @@ import scala.language.{ higherKinds, implicitConversions, postfixOps }
 
 //Using reflectiveCopy to implement bottom-up rewrites on untyped trees.
 
-trait UntypedLang {
-  trait Term extends Product
-  case class Lit(i: Int) extends Term
-  case class Plus(a: Term, b: Term) extends Term
-}
-
 trait UntypedTraversal extends Reflection {
   type Term <: Product
   val Term: Extractor[Any, Option[Term]]
@@ -49,24 +43,6 @@ trait UntypedTraversal extends Reflection {
    * rebuilding the same kind of result, and the code is not actually polymorphic.
    * In exchange, we don't need to encode recursive datatypes specially.
    */
-}
-
-object UntypedTraversalExample extends UntypedTraversal with UntypedLang with App {
-  val Term = Extractor.textractor[Term] { case e: Term => Some(e); case _ => None }
-
-  //A very basic form of constant folding:
-  val constantFoldingCore: Term => Term = {
-    case Plus(Lit(a), Lit(b)) => Lit(a + b)
-    case t => t
-  }
-
-  //Since traverse applies its tree bottom-up, this is able to do complete
-  //constant-folding on a tree
-  val constantFolding = traverse(constantFoldingCore)
-
-  val tree = Plus(Plus(Lit(1), Lit(2)), Lit(3))
-  println(s"Before constant folding: ${tree}")
-  println(s"After constant folding: ${constantFolding(tree)}")
 }
 
 //Using reflectiveCopy to implement bottom-up rewrites on typed trees.
