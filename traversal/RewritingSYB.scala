@@ -1,5 +1,15 @@
 package traversal
 
+/**
+ * This code implements strategic rewriting for expressions.
+ * It is of limited generality, but it supports a useful special case.
+ *
+ * A fully general solution to this problem would be Scrap Your Boilerplate (SYB);
+ * a Scala port is available inside the Shapeless library. I have not tried out
+ * using Shapeless, but it seems that the implementation might indeed be well
+ * encapsulated.
+ */
+
 import scala.language.{ higherKinds, implicitConversions, postfixOps }
 
 //Using reflectiveCopy to implement bottom-up rewrites on untyped trees.
