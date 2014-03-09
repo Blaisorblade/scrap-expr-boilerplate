@@ -10,7 +10,9 @@ trait UntypedLang {
   case class Plus(a: Term, b: Term) extends Term
 }
 
-trait UntypedTraversal extends UntypedLang with Reflection {
+trait UntypedTraversal extends Reflection {
+  type Term <: Product
+  val Term: Extractor[Any, Option[Term]]
   /**
    * Take a transformer and a term, and apply transformer to each subterm of term. 
    * @param transformer
@@ -18,9 +20,7 @@ trait UntypedTraversal extends UntypedLang with Reflection {
   def mapSubtrees(transformer: Term => Term): Term => Term =
     term => {
       val subterms = term.productIterator.toList map {
-        //The pattern matching cannot distinguish this.Term from (something else).Term.
-        //Won't be a problem as long as you don't mix different Terms in the same tree.
-        case subTerm: Term @unchecked => transformer(subTerm)
+        case Term(subTerm) => transformer(subTerm)
         case notTerm => notTerm
       }
       reflectiveCopy(term, subterms: _*)
@@ -51,7 +51,9 @@ trait UntypedTraversal extends UntypedLang with Reflection {
    */
 }
 
-object UntypedTraversalExample extends UntypedTraversal with App {
+object UntypedTraversalExample extends UntypedTraversal with UntypedLang with App {
+  val Term = Extractor.textractor[Term] { case e: Term => Some(e); case _ => None }
+
   //A very basic form of constant folding:
   val constantFoldingCore: Term => Term = {
     case Plus(Lit(a), Lit(b)) => Lit(a + b)
@@ -83,19 +85,22 @@ trait TypedBaseLang {
  * A natural transformation from A to B has type
  * forall T. A[T] => B[T].
  * This definition is also present in Scalaz/shapeless.
- * 
+ *
  * A type-preserving rewrite rule can be given type Exp ~> Exp.
- */ 
+ */
 trait ~>[-A[_], +B[_]] {
   def apply[T](a: A[T]): B[T]
 }
 
 //A version of UntypedTraversal working on typed trees. 
-trait TypedTraversal extends TypedBaseLang with Reflection {
+trait TypedTraversal extends Reflection {
+  type Exp[T] <: Product
+  val Exp: Extractor[Any, Option[Exp[_]]]
+
   def mapSubtrees(transformer: Exp ~> Exp) = new (Exp ~> Exp) {
     def apply[T](e: Exp[T]): Exp[T] = {
       val subtrees = e.productIterator.toList map {
-        case subExp: Exp[t] => transformer(subExp)
+        case Exp(subExp) => transformer(subExp)
         case notExp => notExp
       }
       reflectiveCopy(e, subtrees: _*)
@@ -107,4 +112,8 @@ trait TypedTraversal extends TypedBaseLang with Reflection {
       transformer(mapSubtrees(traverse(transformer))(e))
     }
   }
+}
+
+object TypedTraversalExample extends TypedTraversal with TypedBaseLang {
+  val Exp = Extractor.textractor[Exp[_]] { case e: Exp[_] => Some(e); case _ => None }
 }
