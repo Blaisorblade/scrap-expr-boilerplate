@@ -1,4 +1,5 @@
 package traversal
+package examples
 
 //Using reflectiveCopy to implement bottom-up rewrites on typed trees.
 //We assume that these rewrites are type-preserving.
