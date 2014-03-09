@@ -18,21 +18,28 @@ trait Reflection {
    * Allow functional update on arbitrary case classes. Call it with an
    * instance of a case class and its updated children.
    * Only works on case classes, or classes having an appropriate copy method.
-   * The case class 
+   * The case class
    * @param t an instance of a case class
    */
   def reflectiveCopy[T <: Product](t: T, args: Any*): T = {
     val clazz = t.getClass
     if (args.length == t.productArity) {
-      val copyMethodOpt = clazz.getMethods filter (_.getName == "copy") headOption
+      if (t.productArity == 0) {
+        return t
+      } else {
+        val copyMethodOpt = clazz.getMethods filter (_.getName == "copy") headOption
 
-      (copyMethodOpt getOrElse (
-         throw new RuntimeException("No 'copy' method found in reflectiveCopy")) invoke (t,
-           args.toArray.asInstanceOf[Array[_ <: AnyRef]]: _*)).asInstanceOf[T]
+        (copyMethodOpt getOrElse (
+          throw new RuntimeException(s"No 'copy' method found in reflectiveCopy for ${t} of type ${clazz}")) invoke (t,
+          args.toArray.asInstanceOf[Array[_ <: AnyRef]]: _*)).asInstanceOf[T]
+      }
     } else {
-      throw new IllegalArgumentException(s"${count(t.productArity, "argument")} expected but ${args.length} given")
+      arityError(t.productArity, args.length)
     }
   }
+
+  def arityError(expected: Int, given: Int) =
+    throw new IllegalArgumentException(s"${count(expected, "argument")} expected but ${given} given")
 }
 
 //Using reflectiveCopy to implement bottom-up rewrites on untyped trees.
