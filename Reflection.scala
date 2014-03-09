@@ -2,6 +2,17 @@ package traversal
 
 import scala.language.postfixOps
 
+//I stole this back from Stefan's version here:
+//https://github.com/fehrenbach/ilc/blob/426788b2817b956830cbdfdeda8ec7be43eabe80/scala-prototype/src/main/scala/ilc/feature/inference/Reflection.scala
+//who altered it from my version. I should probably update my gist.
+
+/*
+In Scala, given the definition of an AST made of case classes, how do you define local transformations without
+boilerplate for each case class? Here's my solution, based on reflection.
+   -- Paolo
+https://gist.github.com/Blaisorblade/827e357de942a46acbdb
+ */
+
 object Util {
   def count(amount: Int, noun: String): String = {
     (noun, amount) match {
